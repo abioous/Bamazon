@@ -17,15 +17,33 @@ connection.connect(function(err) {
 
 
 //take product details
-function getProduct(id) {
+function getProduct(id, onFetch) {
+	connection.query('SELECT item_id, product_name, department_name, price, stock_quantity FROM products WHERE item_id = ? ', 
+        [id],function(err, rows, fields) {
+    		  	if (err) throw err;
+     			if(rows && rows.length >0) {
+     				var row = rows[0];
+     				var product = {
+     					id:row.item_id,
+	     				name:row.product_name,
+     					department:	row.department_name,
+     					price:row.price,	
+     					quantity:row.stock_quantity
+     				};
+     				onFetch(product);
+     			}
 
 
+        })
+	return product;
 }
 
 //update product stock
 function updateProductSock(id, amount) {
-
-
+	connection.query('UPDATE products SET stock_quantity = ? WHERE item_id = ? ', 
+		[amount, id], function(err, rows, fields) {
+    		  	if (err) throw err;
+    });
 }
 
 function makeOrder() {
@@ -46,13 +64,22 @@ var inputs = [
   }
 ];
 
-  Inquirer.prompt(inputs).then(function(answers) {
-    console.log(answers);
- });
 
+Inquirer.prompt(inputs).then(function(request) {
+   	var product = getProduct(parseInt(request.productId), function(product) {
+		if(product.quantity >= request.quantity) {
+			updateProductSock(id, product.quantity - request.quantity);
+		} else {
+			console.log("Insufficient quantity!");
+		}
+   	})
 
+});
 
 }
 
 
-connection.end();
+makeOrder();
+
+
+//connection.end();
