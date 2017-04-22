@@ -16,8 +16,24 @@ connection.connect(function(err) {
 });
 
 
+function Order(product, quantity) {
+	var self = this;
+	this.product = product;
+	this.quantity = quantity;
+	this.total = quantity * product.price;
+	this.print = function() {
+		console.log('product: ' + self.product.name);
+		console.log('price: ' + self.product.price);
+		console.log('quantity: ' + self.quantity);
+		console.log('total: ' + self.total);
+			
+	}
+}
+
+
+
 //take product details
-function getProduct(id, onFetch) {
+function processProduct(id, onFetch) {
 	connection.query('SELECT item_id, product_name, department_name, price, stock_quantity FROM products WHERE item_id = ? ', 
         [id],function(err, rows, fields) {
     		  	if (err) throw err;
@@ -35,7 +51,6 @@ function getProduct(id, onFetch) {
 
 
         })
-	return product;
 }
 
 //update product stock
@@ -65,21 +80,36 @@ var inputs = [
 ];
 
 
-Inquirer.prompt(inputs).then(function(request) {
-   	var product = getProduct(parseInt(request.productId), function(product) {
-		if(product.quantity >= request.quantity) {
-			updateProductSock(id, product.quantity - request.quantity);
-		} else {
-			console.log("Insufficient quantity!");
-		}
-   	})
+Inquirer.prompt(inputs).then((request) => {
+   		var quantity = parseFloat(request.quantity)
+   		var productId = parseInt(request.productId)
+	   		processProduct(productId, function(product) {
+	   			
+				if(product.quantity >= quantity) {
+					updateProductSock(product.id, product.quantity - quantity);
+					var order = new Order(product, quantity);
+					console.log('Thank you for placing the following order:')
+					order.print();
 
-});
+				} else {
+					console.log("Insufficient quantity!");
+				}
+
+	   		})
+
+
+
+	}).catch((error) => {
+			throw error;
+	});
 
 }
 
 
+
+
+
 makeOrder();
 
-
 //connection.end();
+	
