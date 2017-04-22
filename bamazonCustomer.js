@@ -54,10 +54,11 @@ function processProduct(id, onFetch) {
 }
 
 //update product stock
-function updateProductSock(id, amount) {
+function updateProductSock(id, amount, onUpdate) {
 	connection.query('UPDATE products SET stock_quantity = ? WHERE item_id = ? ', 
 		[amount, id], function(err, rows, fields) {
     		  	if (err) throw err;
+    		  	onUpdate();
     });
 }
 
@@ -86,13 +87,15 @@ Inquirer.prompt(inputs).then((request) => {
 	   		processProduct(productId, function(product) {
 	   			
 				if(product.quantity >= quantity) {
-					updateProductSock(product.id, product.quantity - quantity);
+					updateProductSock(product.id, product.quantity - quantity, function() {
+						connection.end();
+					});
 					var order = new Order(product, quantity);
 					console.log('Thank you for placing the following order:')
 					order.print();
-
 				} else {
 					console.log("Insufficient quantity!");
+					connection.end();
 				}
 
 	   		})

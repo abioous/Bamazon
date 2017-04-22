@@ -142,7 +142,6 @@ function selectOption() {
 	    ]
 	  }
 	]).then(function (request) {
-		console.log(request);
 		switch(request.option) {
 			case 'View Products for Sale':
 				viewProductsForSale();
